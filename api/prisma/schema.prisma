@@ -1,0 +1,201 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Formation {
+  id          Int               @id @default(autoincrement())
+  title       String            @unique
+  description String
+  code        String
+  level       String
+  parcours    Parcours[]
+  tags        TagsOnFormation[]
+}
+
+model Parcours {
+  id           Int                  @id @default(autoincrement())
+  title        String               @unique
+  description  String?
+  startDate    DateTime?
+  endDate      DateTime?
+  degree       String?
+  image        Bytes?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @default(now())
+  tags         TagsOnParcours[]
+  admin        Admin                @relation(fields: [adminId], references: [id])
+  adminId      Int
+  contacts     ContactsOnParcours[]
+  formation    Formation            @relation(fields: [formationId], references: [id])
+  formationId  Int
+  skills       SkillsOnParcours[]
+  bonusSkills  BonusSkill[]
+  modules      ModulesOnParcours[]
+  objectives   Objective[]
+  groups       Group[]
+  virtualClass String?
+}
+
+model Module {
+  id          Int                 @id @default(autoincrement())
+  title       String              
+  description String
+  image       Bytes?
+  duration    Int
+  rating      Float?
+  minDate     DateTime?
+  maxDate     DateTime?
+  parcours    ModulesOnParcours[]
+  bonusSkills BonusSkillsOnModule[]
+  contacts    ContactsOnModule[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @default(now())
+}
+
+model OpenBadge {
+  id        Int      @id @default(autoincrement())
+  creator   String
+  image     Bytes
+  url       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model Tag {
+  id         Int               @id @default(autoincrement())
+  name       String            @unique
+  color      String
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @default(now())
+  parcours   TagsOnParcours[]
+  formations TagsOnFormation[]
+}
+
+model Skill {
+  id          Int                @id @default(autoincrement())
+  description String             @unique
+  parcours    SkillsOnParcours[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @default(now())
+  badge       String?
+}
+
+model BonusSkill {
+  id          Int      @id @default(autoincrement())
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+  badge       String?
+  parcours    Parcours @relation(fields: [parcoursId], references: [id])
+  parcoursId  Int
+  modules BonusSkillsOnModule[]
+}
+
+model Admin {
+  id       Int        @id @default(autoincrement())
+  idMdb    String
+  parcours Parcours[]
+}
+
+model Teacher {
+  id    Int    @id @default(autoincrement())
+  idMdb String
+}
+
+model Group {
+  id          Int   @id @default(autoincrement())
+  idMdb       String
+  parcours    Parcours @relation(fields: [parcoursId], references: [id])
+  parcoursId  Int
+}
+
+model Contact {
+  id        Int                  @id @default(autoincrement())
+  idMdb     String               @unique
+  name      String
+  role      String
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @default(now())
+  parcours  ContactsOnParcours[]
+  modules   ContactsOnModule[]
+}
+
+model Objective {
+  id          Int      @id @default(autoincrement())
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+  parcours    Parcours @relation(fields: [parcoursId], references: [id])
+  parcoursId  Int
+}
+
+model SkillsOnParcours {
+  skill      Skill    @relation(fields: [skillId], references: [id])
+  skillId    Int
+  parcours   Parcours @relation(fields: [parcoursId], references: [id])
+  parcoursId Int
+
+  @@id([skillId, parcoursId])
+}
+
+model TagsOnParcours {
+  tag        Tag      @relation(fields: [tagId], references: [id])
+  tagId      Int
+  parcours   Parcours @relation(fields: [parcoursId], references: [id])
+  parcoursId Int
+
+  @@id([tagId, parcoursId])
+}
+
+model ContactsOnParcours {
+  parcours   Parcours @relation(fields: [parcoursId], references: [id])
+  parcoursId Int
+  contact    Contact  @relation(fields: [contactId], references: [id])
+  contactId  Int
+
+  @@id([parcoursId, contactId])
+}
+
+model TagsOnFormation {
+  tag         Tag       @relation(fields: [tagId], references: [id])
+  tagId       Int
+  formation   Formation @relation(fields: [formationId], references: [id])
+  formationId Int
+
+  @@id([tagId, formationId])
+}
+
+model BonusSkillsOnModule {
+  bonusSkill    BonusSkill  @relation(fields: [bonusSkillId], references: [id])
+  bonusSkillId  Int
+  module   Module @relation(fields: [moduleId], references: [id])
+  moduleId Int
+
+  @@id([bonusSkillId, moduleId])
+}
+
+model ContactsOnModule {
+  contact    Contact  @relation(fields: [contactId], references: [id])
+  contactId  Int
+  module     Module @relation(fields: [moduleId], references: [id])
+  moduleId   Int
+
+  @@id([contactId, moduleId])
+}
+
+model ModulesOnParcours {
+  module      Module @relation(fields : [moduleId], references: [id])
+  moduleId    Int
+  parcours    Parcours @relation(fields: [parcoursId], references: [id])
+  parcoursId  Int
+
+  @@id([moduleId, parcoursId])
+}
